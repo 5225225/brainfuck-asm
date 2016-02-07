@@ -35,6 +35,21 @@ def runfunc(cmd, args):
     if cmd == "space":
         varcounter += int(args[0])
 
+    if cmd == "litprint":
+        lit = escapes(" ".join(args))
+        curr = 0
+        for ch in lit:
+            delta = ord(ch) - curr
+            if delta > 0:
+                out += "+"*abs(delta)
+            if delta < 0:
+                out += "-"*abs(delta)
+            if delta == 0:
+                pass
+            out += "."
+            curr = ord(ch)
+        runfunc("zero", ["tmp_0"])
+
     if cmd == "strlit":
         variables[args[0]] = varcounter
         lit = escapes(" ".join(args[1:]))
@@ -180,6 +195,35 @@ def runfunc(cmd, args):
         runfunc("copy", [y, "tmp_2"])
         runfunc("move", ["tmp_2", x])
 
+    if cmd == "putch":
+        x = variables[args[0]]
+
+        out += ">"*x
+        out += "."
+        out += "<"*x
+
+    if cmd == "getch":
+        x = variables[args[0]]
+
+        out += ">"*x
+        out += ","
+        out += "<"*x
+
+    if cmd == "while":
+        x = variables[args[0]]
+
+        out += ">"*x
+
+        out += "["
+
+        out += "<"*x
+
+    if cmd == "end_while":
+        x = variables[args[0]]
+        out += ">"*x
+        out += "]"
+        out += "<"*x
+
     if cmd == "sub":
         x, y = args
         xv = variables[x]
@@ -225,14 +269,21 @@ def runfunc(cmd, args):
         out += "[<]"
         out += "<"*s
 
+
     if cmd == "read":
         s = variables[args[0]]
+        eof = 10
+        try:
+            eof = int(args[1])
+        except IndexError:
+            pass
+
         out += ">"*s
 
         out += ">"
 
 
-        out += ",----------[++++++++++>,----------]"
+        out += ",{}[{}>,{}]".format("-"*eof, "+"*eof, "-"*eof)
 
 
         
