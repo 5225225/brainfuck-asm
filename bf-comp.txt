@@ -1,0 +1,84 @@
+=== Language properties ===
+
+Very simple language, follows format
+
+opcode, *operands
+
+Operands are space delimited. Commands are delimited by newlines. Blank lines
+are ignored.
+
+Strings have a null both at the beginning and the end.
+
+This is to allow for easy seeking to the end and back to the start. This allows
+you to keep track of where you are in memory, even with a string of unknown
+size. (seeking to end is just [>], start is just [<]).
+
+=== Commands ===
+
+var <variable name>
+
+    Declares a variable. Does not produce any real brainfuck code, just adds an
+    entry to the variables list.
+
+space <length>
+
+    For algorithms that need the extra space (Ones that haven't been made to
+    work with temporary variables).
+
+    All this does is increments the varcounter so no variables will be stored
+    in that area.
+
+str <variable name> <literal>
+
+    Writes brainfuck code to write string to memory in specified format.
+
+    No optimisation for space is done, but it's easier for a brainfuck
+    interpreter to detect many repeated incrementation and optimise than
+    complex loops. Besides, complex loops are harder to do, and would be prone
+    to bugs.
+
+split2 <source> <var1> <var2>
+
+    Internal command, used for implementing add command
+
+    Moves source variable to var1 and var2.
+
+move <source> <dest>
+
+    Moves source to dest, nulling source in process.
+
+inc <var> <count>
+
+    Increments variable count times.
+
+dec <var> <count>
+
+    Same as increment, but actually decrements.
+
+break
+
+    Inserts a #. This has no meaning in brainfuck, but debuggers may recognise
+    it.
+
+sub <x> <y>
+
+    Subtracts y from x.
+
+    This appears to be unsafe (modified y). I must rewrite this.
+
+add <x> <y>
+
+    Adds y to x. Safe (Does not modify y)
+
+zero <x>
+
+    Zeros out x.
+    May be useful in clearing temporary variables.
+
+print <s>
+
+    Prints out s as a null enclosed string.
+
+read <s>
+
+    Reads standard input into s
