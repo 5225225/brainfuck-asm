@@ -1,10 +1,25 @@
 import sys
 
-TMP_VARS = 3
+TMP_VARS = 4
 
 MAX_MEM_SIZE = 256
 
 # XXX PROGRAMS GETTING INPUT **MUST** HAVE NEWLINE AT END XXX
+
+def convert(instr, converter):
+    out = ""
+    for ch in instr:
+        if ch in converter:
+            out += converter[ch]
+
+    return out
+
+def simplify(prog):
+    while "<>" in prog or "><" in prog:
+        prog = prog.replace("<>", "")
+        prog = prog.replace("><", "")
+    return prog
+
 
 def escapes(text):
     inpt = list(text)
@@ -48,7 +63,7 @@ def runfunc(cmd, args):
                 pass
             out += "."
             curr = ord(ch)
-        runfunc("zero", ["tmp_0"])
+        runfunc("zero", ["tmp_litprint"])
 
     if cmd == "strlit":
         variables[args[0]] = varcounter
@@ -195,6 +210,18 @@ def runfunc(cmd, args):
         runfunc("copy", [y, "tmp_2"])
         runfunc("move", ["tmp_2", x])
 
+    if cmd == "mult":
+        x, y = args
+
+        runfunc("copy", [y, "tmp_3"])
+        runfunc("dec", ["tmp_3", "1"])
+        runfunc("while", ["tmp_3"])
+        runfunc("add", [x, x])
+        runfunc("dec", ["tmp_3", "1"])
+        runfunc("end_while", ["tmp_3"])
+
+
+
     if cmd == "putch":
         x = variables[args[0]]
 
@@ -223,6 +250,34 @@ def runfunc(cmd, args):
         out += ">"*x
         out += "]"
         out += "<"*x
+
+    if cmd == "if":
+        x = args[0]
+        n = 0
+        while "if_cond{}".format(n) in variables:
+            n += 1
+
+        runfunc("var", ["if_cond{}".format(n)])
+
+        runfunc("copy", [x, "if_cond{}".format(n)])
+
+        out += ">"*variables["if_cond{}".format(n)]
+
+        out += "["
+        out += "<"*variables["if_cond{}".format(n)]
+
+        runfunc("zero", ["if_cond{}".format(n)])
+
+    if cmd == "end_if":
+        n = 0
+        while "if_cond{}".format(n) in variables:
+            n += 1
+        cond = variables["if_cond{}".format(n-1)]
+        out += ">"*cond
+        out += "]"
+        out += "<"*cond
+
+
 
     if cmd == "sub":
         x, y = args
@@ -296,11 +351,16 @@ def runfunc(cmd, args):
 
 variables = {}
 varcounter = 0
+indents = 0
+indent_width = 4
 
 for x in range(TMP_VARS):
     runfunc("var", ["tmp_{}".format(x+0)])
+runfunc("var", ["if_cond{}".format(x+0)])
 
-out = ""
+runfunc("var", ["tmp_litprint"])
+
+out = "\n"
 
 linenum = 1
 for line in sys.stdin.readlines():
@@ -308,9 +368,22 @@ for line in sys.stdin.readlines():
     if line:
         cmd, *args = line.split()
         try:
+            if cmd == "end_while" or cmd == "end_if":
+                indents -= 1
+            out += " "*indent_width*indents
             runfunc(cmd, args)
+            out += ": {}\n".format(line)
+
+            if cmd == "while" or cmd == "if":
+                indents += 1
+
         except KeyError as e:
             print("Unknown Variable name: {}".format(str(e)))
+            print("Line {}".format(linenum))
+            raise e
+            sys.exit(1)
+        except ValueError:
+            print("Not enough arguments")
             print("Line {}".format(linenum))
             sys.exit(1)
         if varcounter >= MAX_MEM_SIZE:
@@ -319,4 +392,5 @@ for line in sys.stdin.readlines():
             sys.exit(1)
     linenum += 1
 
+out = simplify(out)
 print(out)

@@ -82,3 +82,10 @@ print <s>
 read <s>
 
     Reads standard input into s
+
+=== Optimisation ===
+
+This way of doing things (composing commands from others) is slower than
+directly doing things. However, if you can prove that the individual parts are
+correct, and that the arrangement is correct, then you can prove that each
+command is correct.

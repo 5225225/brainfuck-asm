@@ -1,0 +1,18 @@
+litprint Enter string to be decoded.\n
+
+strlit prompt String:
+
+print prompt
+
+var ch
+var shift
+
+inc ch 1
+
+while ch
+    getch ch
+    sub ch shift
+    putch ch
+    add ch shift
+    inc shift 1
+end_while ch
